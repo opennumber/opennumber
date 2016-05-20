@@ -2,8 +2,6 @@
 
 www.opennumber.org  恶意手机号码监控开放组织
 
-
-
 ## 隐私保护
 
 

@@ -1,0 +1,14 @@
+# install python requirement libs
+# shell$>  sudo pip install -r requirement_python.txt
+
+sqlalchemy
+pymysql
+simplejson
+redis
+jinja2
+requests
+passlib
+web.py
+pycrypto
+gevent
+

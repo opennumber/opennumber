@@ -18,11 +18,13 @@ from gevent.pywsgi import WSGIServer, WSGIHandler
 # internal module
 import settings
 import myweb
+import models
 
 # 用于监控该网站
 class Ping(myweb.BaseHandler):
     def get(self):
-        return 'ping'
+        data = web.ctx.orm.query(models.TestModel).first()
+        return data.name
     pass
 
 

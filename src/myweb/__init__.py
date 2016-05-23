@@ -15,11 +15,10 @@ import web
 import codecs
 
 
-
 #
 import err
 import utils
-
+import models
 
 
 log = logging.getLogger(__name__)
@@ -164,8 +163,10 @@ class BaseHandler(object):
         response = Response.internal_error()
         try:
             self.log_request()
-            response =  self.get(*args, **kwargs)
-            return response
+            with models.Session() as orm:
+                web.ctx.orm = orm
+                response =  self.get(*args, **kwargs)
+                return response
         except:
             log.exception('BaseHandler failure:')
             status = '500 InternalError'
@@ -193,8 +194,10 @@ class JsonHandler(BaseHandler):
         response = Response.internal_error()
         try:
             self.log_request()
-            response = self.get(*args, **kwargs)
-            return utils.json_dumps(response)
+            with models.Session() as orm:
+                web.ctx.orm = orm
+                response = self.get(*args, **kwargs)
+                return utils.json_dumps(response)
         except err.BaseError as e:
             log.error("base error: %s", e.message)
             response.code = e.code

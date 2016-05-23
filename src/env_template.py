@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*
-import os
-import logging
-import settings
+mysql_config = {
+    "host": '127.0.0.1',
+    "port": 3306,
+    "user": 'root',
+    "password": '',
+    "database": 'opennumber',
+}
 
-opennumber_env = os.getenv("opennumber_env", "debug")
-assert opennumber_settings in settings_list, "invalid env variable: %s, choice from %s" % (opennumber_settings, settings.settings_list)
-
-if opennumber_env == "debug":
-    from opennumber_debug import *
-elif opennumber_env == "production":
-    from opennumber_production import *
-else:
-    pass
-
-logging.warn("load env from %s", opennumber_env)
-
+redis_config = {
+    "host": '127.0.0.1',
+    "port": '6379',
+    "password": None,
+    "db": 0,
+}
 

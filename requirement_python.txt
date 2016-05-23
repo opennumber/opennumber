@@ -2,6 +2,7 @@
 # shell$>  sudo pip install -r requirement_python.txt
 
 sqlalchemy
+sqlalchemy-utils
 pymysql
 simplejson
 redis
@@ -11,4 +12,4 @@ passlib
 web.py
 pycrypto
 gevent
-
+cachetools

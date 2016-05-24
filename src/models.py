@@ -20,12 +20,16 @@ logger = logging.getLogger(__name__)
 
 class Session(object):
     """
+    with Session() as session:
+        session.query()
+
     """
     engine = create_engine("mysql+pymysql://{user}:{password}@{host}:{port}/{database}".format(**settings.mysql_config),
                            encoding='utf8',
+                           connect_args=dict(connect_timeout=2), # don't change the timeout value
                            max_overflow=10,
                            poolclass=sqlalchemy.pool.QueuePool,
-                           pool_size=64,
+                           pool_size=32,
                            pool_recycle=60*30, # half hour
                            pool_reset_on_return=None,
                            pool_timeout=1,

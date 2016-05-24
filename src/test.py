@@ -7,7 +7,7 @@ import requests
 import settings
 import urlparse
 
-class TestFoo(unittest.TestCase):
+class Test(unittest.TestCase):
     def setUp(self):
         self.server = os.getenv('opennumber_server', '127.0.0.1:2000')
         if not re.match(r'^https?:', self.server):

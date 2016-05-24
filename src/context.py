@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+'''
+该模块是对依赖环境的封装，包括redis等等
+'''
 from _imports import *
 
 import redis
-import sqlalchemy.pool
-import pymysql
 import platform
 
 # import module

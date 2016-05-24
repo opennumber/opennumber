@@ -16,7 +16,7 @@ from sqlalchemy.ext.declarative import declarative_base
 import context
 import settings
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 class Session(object):
     """
@@ -51,14 +51,14 @@ class Session(object):
 
     def __exit__(self, _type, value, _traceback):
         if _type is None and value is None and _traceback is None:
-            log.debug("orm session exit success")
+            logger.debug("orm session exit success")
             self.session.flush()
             self.session.remove()
             self.session.close()
             del self.session
             return True
         else:
-            log.exception('')
+            logger.exception('')
             self.session.rollback()
             self.session.close()
             self.session.remove()
@@ -69,9 +69,9 @@ class Session(object):
     pass
 
 
-session = Session()
-
+session = Session().session
 BaseModel = declarative_base()
+
 class TestModel(BaseModel):
     """
 TestModel.__table__.drop(bind=Sesion.engine)
@@ -95,7 +95,5 @@ if __name__ == "__main__":
     with Session() as session:
         session.add(TestModel(name="hahah"))
         session.flush()
-
-        time.sleep(15)
         session.add(TestModel(name="haha"))
         

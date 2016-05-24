@@ -21,7 +21,7 @@ import utils
 import models
 
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 class SeeOther(web.webapi.HTTPError):
     """A `303 See Other` redirect. web.py has bug"""
@@ -32,7 +32,7 @@ class SeeOther(web.webapi.HTTPError):
 
         home = web.ctx.environ['HTTP_ORIGIN']
         newloc = urlparse.urljoin(home, url)
-        log.info('seeother: %s', newloc)
+        logger.info('seeother: %s', newloc)
         headers = {
             'Content-Type': 'text/html',
             'Location': newloc
@@ -154,7 +154,7 @@ class BaseHandler(object):
         
 
     def log_request(self):
-        log.info('client:%s url: %s # %s', self.client_ip, web.ctx.environ['PATH_INFO'], web.input())
+        logger.info('client:%s url: %s # %s', self.client_ip, web.ctx.environ['PATH_INFO'], web.input())
 
         
     def GET(self, *args, **kwargs):
@@ -168,7 +168,7 @@ class BaseHandler(object):
                 response =  self.get(*args, **kwargs)
                 return response
         except:
-            log.exception('BaseHandler failure:')
+            logger.exception('BaseHandler failure:')
             status = '500 InternalError'
             headers = {'Content-Type': 'text/html'}
             raise web.HTTPError(status, headers, 'internal error')
@@ -199,11 +199,11 @@ class JsonHandler(BaseHandler):
                 response = self.get(*args, **kwargs)
                 return utils.json_dumps(response)
         except err.BaseError as e:
-            log.error("base error: %s", e.message)
+            logger.error("base error: %s", e.message)
             response.code = e.code
             response.message = e.message
         except:
-            log.exception('JsonHandler failure:')
+            logger.exception('JsonHandler failure:')
             pass
 
         response_json_data =  utils.json_dumps(response)

@@ -55,14 +55,21 @@ def handler_signal_ctrl_c():
 
 
 def handler_notfound():
-    return web.notfound("not found")
+    return web.notfound("page not found")
 
 
 def handler_internalerror():
-    return web.internalerror("internal error")
+    return web.internalerror("server internal error")
 
 
-urls = ['/ping/?', 'Ping']
+urls = [
+    # phone
+    '/phone/check/?', 'handler_phone.CheckHandler', # 检测手机号码
+    '/phone/commit/while_list', 'handler_phone.CommitWhileListHandler', # 提交白名单
+    '/phone/commit/check_result', 'handler_phone.CommitCheckResultHandler', # 直接提交检查结果,例如黑名单。
+
+    
+    '/ping/?', 'Ping']
 
 if __name__ == "__main__":
     # disable debug

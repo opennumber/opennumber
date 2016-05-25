@@ -13,3 +13,5 @@ web.py
 pycrypto
 gevent
 cachetools
+enum
+ipy

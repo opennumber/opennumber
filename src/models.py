@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 
 from _imports import *
-
+import enum
 
 from sqlalchemy import *
 import sqlalchemy.pool
@@ -17,6 +17,36 @@ import context
 import settings
 
 logger = logging.getLogger(__name__)
+
+
+class StatusEnum(enum.Enum):
+    invalid = 0
+    valid = 1
+    pass
+
+class AuthDoEnum(enum.Enum):
+    phone_check = 'phone_check'
+    phone_commit_white_list = 'phone_commit_white_list'
+    phone_commit_check_result = 'phone_commit_check_result'
+    pass
+
+
+class ActionEnum(enum.Enum):
+    login = 'login'
+    register = 'register'
+    logout = 'logout'
+    post = 'post'
+    pass
+
+
+class RatingEnum(enum.Enum):
+    white = 'white'
+    green = 'green'
+    yellow = 'yellow'
+    red = 'red'
+    black = 'black'
+    pass
+    
 
 class Session(object):
     """
@@ -76,13 +106,14 @@ class Session(object):
 session = Session().session
 BaseModel = declarative_base()
 
+# test table
 class TestModel(BaseModel):
     """
-TestModel.__table__.drop(bind=Sesion.engine)
-TestModel.__table__.create(bind=Sesion.engine)
+    TestModel.__table__.drop(bind=Sesion.engine)
+    TestModel.__table__.create(bind=Sesion.engine)
 
     """
-    __tablename__ = "test"
+    __tablename__ = "tb_test"
 
     # 主键
     id = Column('id', INTEGER, autoincrement=True, primary_key=True)
@@ -95,9 +126,90 @@ TestModel.__table__.create(bind=Sesion.engine)
     pass
     
 
-if __name__ == "__main__":
-    with Session() as session:
-        session.add(TestModel(name="hahah"))
-        session.flush()
-        session.add(TestModel(name="haha"))
-        
+# 手机号码白名单
+class PhoneWhiteListModel(BaseModel):
+    '''phone white list'''
+    __tablename__ = "tb_phone_white_list"
+    # 主键
+    id = Column('id', INTEGER, autoincrement=True, primary_key=True)
+
+    #
+    phone = Column('phone', CHAR(11), nullable=False, unique=True)
+
+    create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
+    update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
+    pass
+
+class UserModel(BaseModel):
+    '''user'''
+    __tablename__ = 'tb_user'
+    # 
+    id = Column('id', INTEGER, autoincrement=True, primary_key=True)
+
+    # contact information
+    phone = Column('phone', CHAR(11), nullable=False, unique=True)
+    name = Column('name', VARCHAR(8), nullable=False, index=True)
+    email = Column('email', VARCHAR(64), nullable=False, unique=True)
+    company_name = Column('company_name', VARCHAR(128), nullable=False)
+    company_url = Column('company_url', VARCHAR(128), nullable=False)
+
+    #
+    token = Column('phone', CHAR(48), nullable=False, unique=True)
+    key = Column('key', CHAR(32), nullable=False)
+
+    #
+    status = Column('status', Enum(StatusEnum), nullable=False)
+    create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
+    update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
+    pass
+
+
+class AuthModel(BaseModel):
+    __tablename__ = 'tb_auth'
+    __table_args__ = (UniqueConstraint('user_id', 'do', name='unique_user_id_do'))
+    #
+    
+    id = Column('id', INTEGER, autoincrement=True, primary_key=True)
+    user_id = Column('user_id', INTEGER, index=True, nullable=False)
+    do = Column('do', Enum(AuthDoEnum), index=True, nullable=False)
+    quota = Column('quota', INTEGER, default=0)
+    
+    create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
+    update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
+
+    
+    pass
+    
+
+
+class PhoneCheckLogModel(BaseModel):
+    __tablename__ = "tb_phone_check_log"
+    #
+    id = Column('id', INTEGER, autoincrement=True, primary_key=True)
+
+    #
+    user_id = Column('user_id', INTEGER, index=True, nullable=False)
+    phone = Column('phone', CHAR(11), index=True, nullable=False)
+    ip = Column('phone', VARCHAR(64), index=True, nullable=False)
+
+
+    action = Column('action', Enum(ActionEnum), index=True, nullable=False)
+    # 
+    create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
+    update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
+    pass
+
+class PhoneCheckResultModel(BaseModel):
+    __tablename__ = 'tb_phone_check_result'
+    #
+    id = Column('id', INTEGER, autoincrement=True, primary_key=True)
+
+    #
+    phone = Column('phone', CHAR(11), nullable=False, unique=True)
+    rating = Column('rating', Enum(RatingEnum), nullable=False, index=True)
+
+    # 
+    create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
+    update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
+    pass
+

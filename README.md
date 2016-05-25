@@ -1,6 +1,6 @@
 # opennumber
 
-www.opennumber.org  恶意手机号码监控开放组织
+www.opennumber.org  薅羊毛手机号码检测开放联盟
 
 
 

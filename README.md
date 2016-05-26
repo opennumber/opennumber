@@ -1,6 +1,6 @@
 # opennumber
 
-www.opennumber.org  薅羊毛手机号码检测开放联盟
+www.opennumber.org  薅羊毛手机号码监测开放平台
 
 
 

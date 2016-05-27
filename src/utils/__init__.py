@@ -128,6 +128,35 @@ def md5(s):
     m = hashlib.md5(s).hexdigest()
     return m # 
 
+def convert_date_to_datetime(_date):
+    assert isinstance(_date, datetime.date)
+
+    dt = datetime.datetime(*_date.timetuple()[:3])
+    return dt
+
+
+def get_next_date(now=None):
+    if not now:
+        now = datetime.datetime.now()
+        pass
+
+    nextday = now + datetime.timedelta(days=1)
+    return nextday.date()
+
+
+def get_today_countdown_seconds(now=None):
+    if not now:
+        now = datetime.datetime.now()
+        pass
+
+    nextday = now + datetime.timedelta(days=1)
+
+    diff = datetime.datetime(*nextday.timetuple()[:3]) - now
+    seconds = diff.total_seconds()
+    return int(seconds)
+
+    
+
 if __name__ == "__main__":
     unittest.main()
     pass

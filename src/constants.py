@@ -4,12 +4,13 @@ import enum
 phone_number_regex = r'(13|14|15|17|18|19)\d{9}'
 
 
-class StatusEnum(enum.IntEnum):
-    invalid = 0
-    valid = 1
+class StatusEnum(enum.Enum):
+    invalid = '0'
+    valid = '1'
     pass
 
-class AuthDoEnum(enum.Enum):
+
+class AuthEnum(enum.Enum):
     phone_check = 'phone_check'
     phone_commit_white_list = 'phone_commit_white_list'
     phone_commit_check_result = 'phone_commit_check_result'

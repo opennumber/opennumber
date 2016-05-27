@@ -32,7 +32,7 @@ redis_connection_pool = redis.ConnectionPool(max_connections=64,
                                              socket_keepalive_options=socket_keepalive_options) #
 
 redis_client = redis.StrictRedis(connection_pool=redis_connection_pool)
-
+redis_client.ping()
 
 
 

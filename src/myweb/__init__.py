@@ -206,12 +206,55 @@ class JsonHandler(BaseHandler):
         
         pass
 
-    
+    def check(self, sign_parameter_list=[]):
+        # get token
+        token = self.get_argument('token')
+
+        # get user
+        user = orm.query(UserModel).filter_by(token=token, status=constatus.StatusEnum.valid).scalar()
+        if not user:
+            raise err.NotFoundToken()
+
+        # check auth
+        user_auth = orm.query(UserAuthModel).filter_by(user_id=user.id, auth=auth).scalar()
+        if not user_auth:
+            raise err.AccessReject()
+
+
+        # quota
+        used = UserAuthQuotaRedis(user.id, user_auth.auth, user_auth.quota).access()
+
+        web.ctx.user = user
+        web.ctx.user_auth = user_auth
+
+
+        # sign
+        sign_text = u''
+        sign_parameter_list.append(self.get_argument('token'))
+        sign_parameter_list.append(user.key)
+        sign_parameter_list.append(self.get_argument_timestamp())
+        
+        for p in sign_parameter_list:
+            sign_text += p
+            pass
+
+
+        sign = self.get_argument('sign')
+        if sign != utils.md5(sign_text):
+            rasie erro.InvaildSign()
+
+        return
+
+        
     def GET(self, *args, **kwargs):
         """
         """
         response = Response.internal_error()
         try:
+            self.get_argument('token')
+            self.get_argument_timestamp()
+            self.get_argument('sign')
+            
             self.log_request()
             with models.Session() as orm:
                 web.ctx.orm = orm

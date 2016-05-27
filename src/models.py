@@ -15,7 +15,8 @@ from sqlalchemy.ext.declarative import declarative_base
 import context
 import settings
 import constants
-
+import utils
+import err
 
 logger = logging.getLogger(__name__)
 class Session(object):
@@ -128,20 +129,20 @@ class UserModel(BaseModel):
     key = Column('key', CHAR(32), nullable=False)
 
     #
-    status = Column('status', Enum(constants.StatusEnum), nullable=False)
+    status = Column('status', Enum(*[e.value for e in constants.StatusEnum]), nullable=False)
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
     update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
     pass
 
 
-class AuthModel(BaseModel):
-    __tablename__ = 'tb_auth'
-    __table_args__ = ((UniqueConstraint('user_id', 'do', name='unique_user_id_do')),)
+class UserAuthModel(BaseModel):
+    __tablename__ = 'tb_user_auth'
+    __table_args__ = ((UniqueConstraint('user_id', 'auth', name='unique_user_id_do')),)
     #
     
     id = Column('id', INTEGER, autoincrement=True, primary_key=True)
     user_id = Column('user_id', INTEGER, index=True, nullable=False)
-    do = Column('do', Enum(constants.AuthDoEnum), index=True, nullable=False)
+    auth = Column('auth', Enum(*[e.value for e in constants.AuthEnum]), index=True, nullable=False)
     quota = Column('quota', INTEGER, default=0)
     
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
@@ -151,6 +152,44 @@ class AuthModel(BaseModel):
     pass
     
 
+class UserAuthQuotaRedis(object):
+    """
+    把用户每天的访问次数放在redis中，每访问一次加1
+    """
+    pattern = 'user_auth_quota:{user_id}:{auth}'
+
+    def __init__(self, user_id, auth, quota):
+        assert auth in constants.AuthEnum.__members__, 'invali user_auth: "%s"' % (user_auth,)
+        assert isinstance(quota, utils.IntegerTypes), 'invalid quota value, "%s"' % (quota,)
+        
+        self.redis_key = self.pattern.format(user_id=user_id, auth=auth)
+        self.quota = quota
+        pass
+
+    def access(self):
+        #
+        used_count = context.redis_client.incr(self.redis_key)
+        logger.debug("key: %s, used: %s", self.redis_key, used_count)        
+        if used_count > self.quota:
+            raise err.QuotaOverFlow(self.quota)
+
+
+        # 
+        if used_count == 1:
+            ttl = utils.get_today_countdown_seconds()
+            context.redis_client.expire(self.redis_key, ttl)
+            logger.info('set key expire: key: %s, ttl: %s', self.redis_key, ttl)
+            pass
+        
+        return used_count
+    
+    def flush(self):
+        context.redis_client.delete(self.redis_key)
+        logger.info("flush key: %s", self.redis_key)
+        return
+
+    pass
+        
 
 class PhoneCheckLogModel(BaseModel):
     __tablename__ = "tb_phone_check_log"
@@ -163,7 +202,7 @@ class PhoneCheckLogModel(BaseModel):
     ip = Column('ip', VARCHAR(64), index=True, nullable=False)
 
 
-    action = Column('action', Enum(constants.ActionEnum), index=True, nullable=False)
+    action = Column('action', Enum(*[e.value for e in constants.ActionEnum]), index=True, nullable=False)
     # 
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
     update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
@@ -176,10 +215,21 @@ class PhoneCheckResultModel(BaseModel):
 
     #
     phone = Column('phone', CHAR(11), nullable=False, unique=True)
-    rating = Column('rating', Enum(constants.RatingEnum), nullable=False, index=True)
+    rating = Column('rating', Enum(*[e.value for e in constants.RatingEnum]), nullable=False, index=True)
 
     # 
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
     update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
     pass
 
+
+def create_table(table_name):
+    model = globals()[table_name]
+    pass
+
+
+if __name__ == "__main__":
+    BaseModel.metadata.drop_all(bind=Session.engine, checkfirst=True)        
+    BaseModel.metadata.create_all(bind=Session.engine, checkfirst=True)
+    
+    #UserModel.__table__.create(bind=Session.engine, checkfirst=False)

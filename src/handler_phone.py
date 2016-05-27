@@ -9,8 +9,11 @@ import myweb
 
 class CheckHandler(myweb.JsonHandler):
     def get(self):
-        now = datetime.datetime.now()
         phone = self.get_argument_phone('phone')
+        
+        self.check(['phone',])
+        
+        now = datetime.datetime.now()
         create_datetime = self.get_argument_datetime('create_datetime', now)
 
         ip = self.get_argument("ip", '')

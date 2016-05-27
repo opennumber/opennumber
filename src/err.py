@@ -7,6 +7,7 @@ code_map = dict(code=XError class)
 import types
 import constants
 
+
 class BaseError(Exception):
     code = -1
     message = 'base_error'
@@ -108,7 +109,22 @@ class InvalidAction(BaseError):
     code = 9
     message = 'invalid action. valid action %s' % ([x.value for x in constants.ActionEnum])
 
-    
+    pass
+
+class NotFoundToken(BaseError):
+    code = 10
+    message = 'not found token'
+    pass
+
+class AccessReject(BaseError):
+    code = 11
+    message = 'access reject'
+    pass
+
+class QuotaOverFlow(BaseError):
+    code = 12
+    message = 'quota overflow. get help to increment quota by contact administrator'
+    pass
     
 
 

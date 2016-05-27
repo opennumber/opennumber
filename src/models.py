@@ -3,7 +3,6 @@ from __future__ import absolute_import
 
 
 from _imports import *
-import enum
 
 from sqlalchemy import *
 import sqlalchemy.pool
@@ -15,39 +14,10 @@ from sqlalchemy.ext.declarative import declarative_base
 #
 import context
 import settings
+import constants
+
 
 logger = logging.getLogger(__name__)
-
-
-class StatusEnum(enum.Enum):
-    invalid = 0
-    valid = 1
-    pass
-
-class AuthDoEnum(enum.Enum):
-    phone_check = 'phone_check'
-    phone_commit_white_list = 'phone_commit_white_list'
-    phone_commit_check_result = 'phone_commit_check_result'
-    pass
-
-
-class ActionEnum(enum.Enum):
-    login = 'login'
-    register = 'register'
-    logout = 'logout'
-    post = 'post'
-    pass
-
-
-class RatingEnum(enum.Enum):
-    white = 'white'
-    green = 'green'
-    yellow = 'yellow'
-    red = 'red'
-    black = 'black'
-    pass
-    
-
 class Session(object):
     """
     with Session() as session:
@@ -154,11 +124,11 @@ class UserModel(BaseModel):
     company_url = Column('company_url', VARCHAR(128), nullable=False)
 
     #
-    token = Column('phone', CHAR(48), nullable=False, unique=True)
+    token = Column('token', CHAR(48), nullable=False, unique=True)
     key = Column('key', CHAR(32), nullable=False)
 
     #
-    status = Column('status', Enum(StatusEnum), nullable=False)
+    status = Column('status', Enum(constants.StatusEnum), nullable=False)
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
     update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
     pass
@@ -166,12 +136,12 @@ class UserModel(BaseModel):
 
 class AuthModel(BaseModel):
     __tablename__ = 'tb_auth'
-    __table_args__ = (UniqueConstraint('user_id', 'do', name='unique_user_id_do'))
+    __table_args__ = ((UniqueConstraint('user_id', 'do', name='unique_user_id_do')),)
     #
     
     id = Column('id', INTEGER, autoincrement=True, primary_key=True)
     user_id = Column('user_id', INTEGER, index=True, nullable=False)
-    do = Column('do', Enum(AuthDoEnum), index=True, nullable=False)
+    do = Column('do', Enum(constants.AuthDoEnum), index=True, nullable=False)
     quota = Column('quota', INTEGER, default=0)
     
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
@@ -190,10 +160,10 @@ class PhoneCheckLogModel(BaseModel):
     #
     user_id = Column('user_id', INTEGER, index=True, nullable=False)
     phone = Column('phone', CHAR(11), index=True, nullable=False)
-    ip = Column('phone', VARCHAR(64), index=True, nullable=False)
+    ip = Column('ip', VARCHAR(64), index=True, nullable=False)
 
 
-    action = Column('action', Enum(ActionEnum), index=True, nullable=False)
+    action = Column('action', Enum(constants.ActionEnum), index=True, nullable=False)
     # 
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
     update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
@@ -206,7 +176,7 @@ class PhoneCheckResultModel(BaseModel):
 
     #
     phone = Column('phone', CHAR(11), nullable=False, unique=True)
-    rating = Column('rating', Enum(RatingEnum), nullable=False, index=True)
+    rating = Column('rating', Enum(constants.RatingEnum), nullable=False, index=True)
 
     # 
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)

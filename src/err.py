@@ -5,6 +5,7 @@ code_map = dict(code=XError class)
 """
 
 import types
+import constants
 
 class BaseError(Exception):
     code = -1
@@ -97,6 +98,18 @@ class MissingTimestampError(BaseError):
     code = 7
     message = 'missing parameter "timestamp". timestamp is used for debug. e.g: timestamp=time()'
     pass
+
+
+class InvalidPhoneNumber(BaseError):
+    code = 8
+    message = 'invalid phone number. regex: "%s"' % (constants.phone_number_regex)
+
+class InvalidAction(BaseError):
+    code = 9
+    message = 'invalid action. valid action %s' % ([x.value for x in constants.ActionEnum])
+
+    
+    
 
 
 # 下面的代码对所有的错误的代码进行校验，保证error.code不会重复

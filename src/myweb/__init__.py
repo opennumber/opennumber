@@ -147,6 +147,25 @@ class BaseHandler(object):
                 raise TypeError("parameter '%s' default value should be datetime." % (argument))
 
         raise err.MissingParameter(argument)
+    
+    def get_argument_phone(self, argument):
+        v = self.get_argument(argument, None)
+        if v:
+            if re.match(settings.phone_number_regex, v):
+                return v
+            else:
+                raise err.InvalidPhoneNumber()
+
+        raise err.MissingParameter(argument)
+    
+    def get_argument_action(self, argument):
+        v = self.get_argument(argument, None)
+        if v:
+            if v not in models.ActionEnum:
+                raise err.InvalidAction(models.ActionEnum)
+            return v
+
+        raise err.MissingParameter(argument)
 
     
     def POST(self, *args, **kwargs):

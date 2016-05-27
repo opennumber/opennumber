@@ -29,6 +29,14 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
+        
+        "lazy_object_proxy.compat":{
+            'level': 'ERROR',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        
+        
     },
     
     'root': {

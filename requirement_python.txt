@@ -13,5 +13,5 @@ web.py
 pycrypto
 gevent
 cachetools
-enum
+enum34
 ipy

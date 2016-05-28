@@ -4,12 +4,15 @@ from __future__ import absolute_import
 
 from _imports import *
 
+#import sqlalchemy as sa
 from sqlalchemy import *
+from sqlalchemy.dialects.mysql import BIGINT
 import sqlalchemy.pool
-import sqlalchemy.orm
 from sqlalchemy.orm import sessionmaker,scoped_session
-from sqlalchemy_utils import Timestamp
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy_utils import EncryptedType
+import ipaddress
+
 
 #
 import context
@@ -19,6 +22,7 @@ import utils
 import err
 
 logger = logging.getLogger(__name__)
+sqlalchemy_encrypt_key = settings.sqlalchemy_encrypt_key
 class Session(object):
     """
     with Session() as session:
@@ -26,15 +30,14 @@ class Session(object):
 
     """
     engine = create_engine("mysql+pymysql://{user}:{password}@{host}:{port}/{database}".format(**settings.mysql_config),
-                           encoding='utf8',
-                           connect_args=dict(connect_timeout=2), # don't change the timeout value
-                           max_overflow=10,
-                           poolclass=sqlalchemy.pool.QueuePool,
-                           pool_size=32,
-                           pool_recycle=60*30, # half hour
-                           pool_reset_on_return=None,
-                           pool_timeout=1,
-                           echo=False)
+                              encoding='utf8',
+                              connect_args=dict(connect_timeout=2), # don't change the timeout value
+                              max_overflow=10,
+                              poolclass=sqlalchemy.pool.QueuePool,
+                              pool_size=32,
+                              pool_recycle=60*10, # half hour
+                              pool_timeout=1,
+                              echo=False)
 
 
 
@@ -65,8 +68,8 @@ class Session(object):
         else:
             logger.exception('')
             self.session.rollback()
+            self.session.remove()            
             self.session.close()
-            self.session.remove()
             del self.session
             return False
 
@@ -87,7 +90,7 @@ class TestModel(BaseModel):
     __tablename__ = "tb_test"
 
     # 主键
-    id = Column('id', INTEGER, autoincrement=True, primary_key=True)
+    id = Column('id', BIGINT(unsigned=True), autoincrement=True, primary_key=True)
 
     #
     name = Column('name', VARCHAR(100), nullable=False)
@@ -97,41 +100,68 @@ class TestModel(BaseModel):
     pass
     
 
-# 手机号码白名单
-class PhoneWhiteListModel(BaseModel):
-    '''phone white list'''
-    __tablename__ = "tb_phone_white_list"
-    # 主键
-    id = Column('id', INTEGER, autoincrement=True, primary_key=True)
-
-    #
-    phone = Column('phone', CHAR(11), nullable=False, unique=True)
-
-    create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
-    update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
-    pass
 
 class UserModel(BaseModel):
     '''user'''
     __tablename__ = 'tb_user'
     # 
-    id = Column('id', INTEGER, autoincrement=True, primary_key=True)
+    id = Column('id', BIGINT(unsigned=True), autoincrement=True, primary_key=True)
 
     # contact information
-    phone = Column('phone', CHAR(11), nullable=False, unique=True)
-    name = Column('name', VARCHAR(8), nullable=False, index=True)
-    email = Column('email', VARCHAR(64), nullable=False, unique=True)
-    company_name = Column('company_name', VARCHAR(128), nullable=False)
-    company_url = Column('company_url', VARCHAR(128), nullable=False)
+    _phone = Column('phone', CHAR(11), nullable=False, unique=True)
+    name = Column(EncryptedType(Unicode, sqlalchemy_encrypt_key), nullable=False)
+    email = Column(VARCHAR(64), nullable=False, unique=True)
+    company_name = Column(EncryptedType(Unicode, sqlalchemy_encrypt_key), nullable=False)
+    company_url = Column(EncryptedType(Unicode, sqlalchemy_encrypt_key), nullable=False)
 
     #
-    token = Column('token', CHAR(48), nullable=False, unique=True)
-    key = Column('key', CHAR(32), nullable=False)
+    token = Column('token', VARCHAR(64), nullable=False, unique=True)
+    key = Column('key', EncryptedType(Unicode, sqlalchemy_encrypt_key), nullable=False)
 
     #
-    status = Column('status', Enum(*[e.value for e in constants.StatusEnum]), nullable=False)
+    status = Column('status', Enum(*[e.value for e in constants.StatusEnum]), nullable=False, default='1')
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
     update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
+
+    # phone
+    @property
+    def phone(self):
+        return self._phone
+    @phone.setter
+    def phone(self, value):
+        if not constants.phone_number_regex.match(value):
+            raise err.InvalidPhoneNumber()
+        self._phone = value
+        
+    #
+    @classmethod
+    def create(cls, name, phone, email, company_name, company_url, token=None, key=None):
+        global session
+        if not token:
+            token = utils.get_unique_string()
+            pass
+
+        if not key:
+            key = utils.generate_random_string(24)
+            pass
+
+        user = cls()
+        user.name = name
+        user.phone = phone
+        user.email = email
+        user.company_name = company_name
+        user.company_url = company_url
+        user.token = token
+        user.key = key
+
+        #
+        session.add(user)
+        session.flush()
+        new_user = session.query(cls).filter_by(token=token).one()
+
+        logger.warn('create user. user.phone: %s, user.id: %s, user.key: %s, user.token: %s',
+                    new_user.phone, new_user.id, user.key, user.token)
+        return new_user
     pass
 
 
@@ -140,15 +170,32 @@ class UserAuthModel(BaseModel):
     __table_args__ = ((UniqueConstraint('user_id', 'auth', name='unique_user_id_do')),)
     #
     
-    id = Column('id', INTEGER, autoincrement=True, primary_key=True)
-    user_id = Column('user_id', INTEGER, index=True, nullable=False)
+    id = Column('id', BIGINT(unsigned=True), autoincrement=True, primary_key=True)
+    user_id = Column('user_id', BIGINT(unsigned=True), index=True, nullable=False)
     auth = Column('auth', Enum(*[e.value for e in constants.AuthEnum]), index=True, nullable=False)
-    quota = Column('quota', INTEGER, default=0)
+    quota = Column('quota', BIGINT(unsigned=True), default=0)
     
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
     update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
 
-    
+
+    @classmethod
+    def create(cls, user_id, auth, quota=200):
+        global session
+        user = session.query(UserModel).get(user_id)
+
+        user_auth = cls(user_id=user_id, auth=auth, quota=quota)
+
+        session.add(user_auth)
+        session.flush()
+
+        #
+        new_user_auth = session.query(cls).filter_by(user_id=user_id, auth=auth).one()
+        
+        logger.info("create user quota. user_id: %s, auth: %s, id: %s, quota: %d",
+                    user_id, auth, new_user_auth.id, quota)
+        return new_user_auth
+
     pass
     
 
@@ -169,10 +216,9 @@ class UserAuthQuotaRedis(object):
     def access(self):
         #
         used_count = context.redis_client.incr(self.redis_key)
-        logger.debug("key: %s, used: %s", self.redis_key, used_count)        
+        logger.debug("key: %s, used: %s, quota: %s", self.redis_key, used_count, self.quota)
         if used_count > self.quota:
             raise err.QuotaOverFlow(self.quota)
-
 
         # 
         if used_count == 1:
@@ -191,41 +237,120 @@ class UserAuthQuotaRedis(object):
     pass
         
 
+# 手机号码白名单
+class PhoneWhiteListModel(BaseModel):
+    '''phone white list'''
+    __tablename__ = "tb_phone_white_list"
+    # 主键
+    id = Column('id', BIGINT(unsigned=True), autoincrement=True, primary_key=True)
+
+    #
+    user_id = Column(BIGINT(unsigned=True), nullable=False, index=True)
+    _phone = Column('phone', CHAR(11), nullable=False, unique=True)
+
+    create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
+    update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
+
+
+    # phone
+    @property
+    def phone(self):
+        return self._phone
+    @phone.setter
+    def phone(self, value):
+        if not constants.phone_number_regex.match(value):
+            raise err.InvalidPhoneNumber()
+        self._phone = value
+
+        return
+    
+    pass
+
+
 class PhoneCheckLogModel(BaseModel):
     __tablename__ = "tb_phone_check_log"
     #
-    id = Column('id', INTEGER, autoincrement=True, primary_key=True)
+    id = Column('id', BIGINT(unsigned=True), autoincrement=True, primary_key=True)
 
     #
-    user_id = Column('user_id', INTEGER, index=True, nullable=False)
-    phone = Column('phone', CHAR(11), index=True, nullable=False)
-    ip = Column('ip', VARCHAR(64), index=True, nullable=False)
-
+    user_id = Column('user_id', BIGINT(unsigned=True), index=True, nullable=False)
+    _phone = Column('phone', CHAR(11), index=True, nullable=False)
+    _ip = Column('ip', VARCHAR(64), index=True, nullable=False)
 
     action = Column('action', Enum(*[e.value for e in constants.ActionEnum]), index=True, nullable=False)
     # 
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
+    
     update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
+
+    # ip
+    @property
+    def ip(self):
+        return self._ip
+    
+    @ip.setter
+    def ip(self, value):
+        assert isinstance(value, (types.StringType, types.UnicodeType, types.NoneType))
+        if not value:
+            self._ip = ''
+            return
+
+        if isinstance(value, types.StringType):
+            value = value.decode('utf8')
+            
+        try:
+            ipaddress.ip_address(value)
+            self._ip = value.strip()
+        except ValueError:
+            raise err.InvalidIp()
+        
+        return
+    
+    # phone
+    @property
+    def phone(self):
+        return self._phone
+    
+    @phone.setter
+    def phone(self, value):
+        if not constants.phone_number_regex.match(value):
+            raise err.InvalidPhoneNumber()
+        self._phone = value
+        return
+
+    
     pass
 
 class PhoneCheckResultModel(BaseModel):
     __tablename__ = 'tb_phone_check_result'
     #
-    id = Column('id', INTEGER, autoincrement=True, primary_key=True)
+    id = Column('id', BIGINT(unsigned=True), autoincrement=True, primary_key=True)
 
     #
-    phone = Column('phone', CHAR(11), nullable=False, unique=True)
+    user_id = Column(BIGINT(unsigned=True), index=True, nullable=False)
+    
+    _phone = Column('phone', CHAR(11), nullable=False, unique=True)
     rating = Column('rating', Enum(*[e.value for e in constants.RatingEnum]), nullable=False, index=True)
 
     # 
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
     update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
-    pass
 
 
-def create_table(table_name):
-    model = globals()[table_name]
+    # phone
+    @property
+    def phone(self):
+        return self._phone
+    
+    @phone.setter
+    def phone(self, value):
+        if not constants.phone_number_regex.match(value):
+            raise err.InvalidPhoneNumber()
+        self._phone = value
+        return
+
     pass
+
 
 
 if __name__ == "__main__":

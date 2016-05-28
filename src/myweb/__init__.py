@@ -2,6 +2,7 @@
 '''
 该模块仅仅简单的对webpy进行封装
 '''
+from _imports import *
 import urlparse
 import sys
 reload(sys)
@@ -13,12 +14,16 @@ import logging
 import web
 
 import codecs
-
+import ipaddress
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 #
 import err
 import utils
 import models
+from models import UserModel, UserAuthModel, UserAuthQuotaRedis
+import constants
+import settings
 
 
 logger = logging.getLogger(__name__)
@@ -97,9 +102,9 @@ class BaseHandler(object):
     
     def get_argument(self, argument, default=utils.none):
         """获取参数"""
-        v = web.input().get(argument, None)
+        v = web.input().get(argument, '').strip()
         if v:
-            return v.strip()
+            return v
 
         if default is not utils.none:
             return default
@@ -107,6 +112,9 @@ class BaseHandler(object):
         raise err.MissingParameter(argument)
     
     def get_argument_int(self, argument, default=utils.none):
+        if default is not utils.none:
+            assert isinstance(default, utils.IntegerTypes)
+            
         v = self.get_argument(argument, None)
         if v:
             try:
@@ -116,11 +124,8 @@ class BaseHandler(object):
 
             
         if default is not utils.none:
-            if isinstance(default, (int, long)):
-                return default
-            else:
-                raise TypeError("parameter '%s' default value should be integer." % (argument))
-
+            return default
+        
         raise err.MissingParameter(argument)
 
 
@@ -128,10 +133,13 @@ class BaseHandler(object):
         timestamp = web.input().get('timestamp', '')
         if not timestamp:
             raise err.MissingTimestampError()
-        return
+        return timestamp
 
     
     def get_argument_datetime(self, argument, default=utils.none):
+        if default is not utils.none:
+            assert isinstance(default, datetime.datetime)
+            
         v = self.get_argument(argument, None)
         if v:
             try:
@@ -141,31 +149,48 @@ class BaseHandler(object):
                 raise err.DatetimeParameterError(argument)
 
         if default is not utils.none:
-            if isinstance(default, datetime.datetime):
-                return default
-            else:
-                raise TypeError("parameter '%s' default value should be datetime." % (argument))
+            return default
 
         raise err.MissingParameter(argument)
     
     def get_argument_phone(self, argument):
-        v = self.get_argument(argument, None)
-        if v:
-            if re.match(settings.phone_number_regex, v):
-                return v
-            else:
-                raise err.InvalidPhoneNumber()
+        v = self.get_argument(argument)
 
-        raise err.MissingParameter(argument)
+        if constants.phone_number_regex.match(v):
+            return v
+        
+        raise err.InvalidPhoneNumber()
+        
     
     def get_argument_action(self, argument):
-        v = self.get_argument(argument, None)
+        v = self.get_argument(argument)
+        if v not in constants.ActionEnum.__members__:
+            raise err.InvalidAction()
+        return v
+    
+    
+    def get_argument_ip(self, argument, default=utils.none):
+        v = self.get_argument(argument, '')
         if v:
-            if v not in models.ActionEnum:
-                raise err.InvalidAction(models.ActionEnum)
-            return v
+            try:
+                ipaddress.ip_address(v)
+                return v
+            except ValueError as e:
+                raise err.InvalidIp()
+            
 
-        raise err.MissingParameter(argument)
+        if default is not utils.none:
+            return default
+        
+        return ''
+
+
+    def get_argument_rating(self, argument):
+        v = self.get_argument(argument)
+
+        if v not in constants.RatingEnum.__members__:
+            raise err.InvalidRating()
+        return v
 
     
     def POST(self, *args, **kwargs):
@@ -206,20 +231,24 @@ class JsonHandler(BaseHandler):
         
         pass
 
-    def check(self, sign_parameter_list=[]):
+    def check(self, auth, sign_parameter_list=[]):
+        """
+        检测用户是否具有权限，同时对皮进行校验签名
+        """
+        assert auth in constants.AuthEnum, 'invalid auth "%s"' % (auth, )
         # get token
         token = self.get_argument('token')
 
+        session = web.ctx.orm
         # get user
-        user = orm.query(UserModel).filter_by(token=token, status=constatus.StatusEnum.valid).scalar()
+        user = session.query(UserModel).filter_by(token=token, status=constants.StatusEnum.valid.value).scalar()
         if not user:
             raise err.NotFoundToken()
 
         # check auth
-        user_auth = orm.query(UserAuthModel).filter_by(user_id=user.id, auth=auth).scalar()
+        user_auth = session.query(UserAuthModel).filter_by(user_id=user.id, auth=auth.value).scalar()
         if not user_auth:
             raise err.AccessReject()
-
 
         # quota
         used = UserAuthQuotaRedis(user.id, user_auth.auth, user_auth.quota).access()
@@ -230,18 +259,16 @@ class JsonHandler(BaseHandler):
 
         # sign
         sign_text = u''
-        sign_parameter_list.append(self.get_argument('token'))
-        sign_parameter_list.append(user.key)
-        sign_parameter_list.append(self.get_argument_timestamp())
-        
-        for p in sign_parameter_list:
+        lst = [user.key, self.get_argument_timestamp()]
+        lst.extend(sign_parameter_list)
+        for p in lst:
             sign_text += p
             pass
 
 
         sign = self.get_argument('sign')
         if sign != utils.md5(sign_text):
-            rasie erro.InvaildSign()
+            raise err.InvaildSign()
 
         return
 
@@ -250,16 +277,21 @@ class JsonHandler(BaseHandler):
         """
         """
         response = Response.internal_error()
+        web.ctx.orm = None
         try:
+            self.get_argument_timestamp()            
             self.get_argument('token')
-            self.get_argument_timestamp()
             self.get_argument('sign')
             
             self.log_request()
-            with models.Session() as orm:
-                web.ctx.orm = orm
-                response = self.get(*args, **kwargs)
-                return utils.json_dumps(response)
+            with models.Session() as session:
+                web.ctx.orm = session
+                result = self.get(*args, **kwargs)
+                response.code = 0
+                response.message = err.Success.message
+                response.result = result
+                pass
+            
         except err.BaseError as e:
             logger.error("base error: %s", e.message)
             response.code = e.code
@@ -267,7 +299,9 @@ class JsonHandler(BaseHandler):
         except:
             logger.exception('JsonHandler failure:')
             pass
-
+        finally:
+            del web.ctx.orm
+            
         response_json_data =  utils.json_dumps(response)
         return response_json_data
     

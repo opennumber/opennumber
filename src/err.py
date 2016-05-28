@@ -103,7 +103,7 @@ class MissingTimestampError(BaseError):
 
 class InvalidPhoneNumber(BaseError):
     code = 8
-    message = 'invalid phone number. regex: "%s"' % (constants.phone_number_regex)
+    message = 'invalid phone number. regex: "%s"' % (constants.phone_number_regex.pattern)
 
 class InvalidAction(BaseError):
     code = 9
@@ -123,10 +123,18 @@ class AccessReject(BaseError):
 
 class QuotaOverFlow(BaseError):
     code = 12
-    message = 'quota overflow. get help to increment quota by contact administrator'
+    message = 'daily quota overflow. get help to increment quota by contact administrator'
     pass
     
+class InvalidIp(BaseError):
+    code = 13
+    message = 'invalid ip value. except ipv4 & ipv6'
+    pass
 
+class InvalidRating(BaseError):
+    code = 14
+    message = 'invalid rating. valid rating %s' % ([e.value for e in constants.RatingEnum])
+    pass
 
 # 下面的代码对所有的错误的代码进行校验，保证error.code不会重复
 _locals_keys = locals().keys()

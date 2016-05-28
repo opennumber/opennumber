@@ -67,7 +67,7 @@ def handler_internalerror():
 urls = [
     # phone
     '/phone/check/?', 'handler_phone.CheckHandler', # 检测手机号码
-    '/phone/commit/while_list', 'handler_phone.CommitWhileListHandler', # 提交白名单
+    '/phone/commit/white_list', 'handler_phone.CommitWhiteListHandler', # 提交白名单
     '/phone/commit/check_result', 'handler_phone.CommitCheckResultHandler', # 直接提交检查结果,例如黑名单。
 
     

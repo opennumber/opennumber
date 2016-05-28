@@ -14,4 +14,4 @@ pycrypto
 gevent
 cachetools
 enum34
-ipy
+git+https://github.com/phihag/ipaddress@master

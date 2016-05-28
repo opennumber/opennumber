@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*
 import enum
-
-phone_number_regex = r'(13|14|15|17|18|19)\d{9}'
-
+import re
+phone_number_regex = re.compile(r'(13|14|15|17|18|19)\d{9}$')
 
 class StatusEnum(enum.Enum):
     invalid = '0'

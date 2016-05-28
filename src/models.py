@@ -206,7 +206,7 @@ class UserAuthQuotaRedis(object):
     pattern = 'user_auth_quota:{user_id}:{auth}'
 
     def __init__(self, user_id, auth, quota):
-        assert auth in constants.AuthEnum.__members__, 'invali user_auth: "%s"' % (user_auth,)
+        assert auth in constants.AuthEnum.__members__, 'invali user_auth: "%s"' % (auth,)
         assert isinstance(quota, utils.IntegerTypes), 'invalid quota value, "%s"' % (quota,)
         
         self.redis_key = self.pattern.format(user_id=user_id, auth=auth)

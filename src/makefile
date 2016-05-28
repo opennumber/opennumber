@@ -25,7 +25,7 @@ restart:
 
 
 # test
-test:							#in src/, make -f ../makefile  test
+test:							#
 	python -m unittest discover -f
 
 # 把当前的代码copy到开发服务器上, make copy_to_server target=username@host:/path

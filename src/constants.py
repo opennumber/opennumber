@@ -30,5 +30,29 @@ class RatingEnum(enum.Enum):
     yellow = 'yellow'
     red = 'red'
     black = 'black'
+
+    @classmethod
+    def get_ordered_list(cls):
+        return ['white', 'green', 'yellow', 'red', 'black']
+    
+    @classmethod
+    def next(cls, r):
+        assert hasattr(cls, r)
+
+        ordered_list = cls.get_ordered_list()
+        index = ordered_list.index(r)
+        return ordered_list[min(index+1, len(ordered_list)-1)]
+        
+    @classmethod
+    def greater_than(cls, a, b):
+        assert hasattr(cls, a)
+        assert hasattr(cls, b)
+
+        ordered_list = cls.get_ordered_list()
+        a_index = ordered_list.index(a)
+        b_index = ordered_list.index(b)
+
+        return a_index > b_index
+        
     pass
 

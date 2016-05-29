@@ -67,6 +67,14 @@ class TestPing(BaseTest):
 
         
 class Test(BaseTest):
+    def test_rating(self):
+        RatingEnum = constants.RatingEnum
+        r = 'white'
+        self.assertTrue(RatingEnum.next(r) == 'green')
+        self.assertTrue(RatingEnum.next('black'), 'black')
+        self.assertTrue(RatingEnum.greater_than('green', 'white'))
+        self.assertTrue(RatingEnum.greater_than('black', 'red'))
+        
     def test_user_auth_quota_redis(self):
         user_id = random.randint(10000000, 99990000)
 
@@ -113,7 +121,24 @@ class Test(BaseTest):
         models.session.flush()
         return
 
-    
+    def test_check_result(self):
+        user_id = 1
+
+        phone = self.get_random_phone_number()
+
+        rating = 'green'
+
+        result = models.PhoneCheckResultModel.create(user_id=user_id, phone=phone, rating=rating)
+        self.assertTrue(result.rating == rating)
+        
+        rating = 'black'
+        result = models.PhoneCheckResultModel.create(user_id=user_id, phone=phone, rating=rating)
+        self.assertTrue(result.rating == rating)
+
+        new = models.session.query(models.PhoneCheckResultModel).filter_by(phone=phone).one()
+        self.assertTrue(new.rating == rating)
+        
+        return
     pass
 
 class TestWeb(BaseTest):
@@ -147,6 +172,8 @@ class TestWeb(BaseTest):
         return
 
     pass
+
+
 
 
 

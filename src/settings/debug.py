@@ -30,8 +30,8 @@ LOGGING = {
             'propagate': False,
         },
         
-        "lazy_object_proxy.compat":{
-            'level': 'ERROR',
+        "sqlalchemy.orgm":{
+            'level': 'DEBUG',
             'handlers': ['console'],
             'propagate': False,
         },

@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 
 from _imports import *
-
+import pymysql
 #import sqlalchemy as sa
 from sqlalchemy import *
 from sqlalchemy.dialects.mysql import BIGINT
@@ -37,7 +37,7 @@ class Session(object):
                               pool_size=32,
                               pool_recycle=60*10, # half hour
                               pool_timeout=1,
-                              echo=False)
+                              echo=True)
 
 
 
@@ -66,7 +66,8 @@ class Session(object):
             del self.session
             return True
         else:
-            logger.exception('')
+            if not isinstance(_type, pymysql.err.IntegrityError):
+                logger.exception('')
             self.session.rollback()
             self.session.remove()            
             self.session.close()
@@ -108,7 +109,7 @@ class UserModel(BaseModel):
     id = Column('id', BIGINT(unsigned=True), autoincrement=True, primary_key=True)
 
     # contact information
-    _phone = Column('phone', CHAR(11), nullable=False, unique=True)
+    phone = Column('phone', CHAR(11), nullable=False, unique=True)
     name = Column(EncryptedType(Unicode, sqlalchemy_encrypt_key), nullable=False)
     email = Column(VARCHAR(64), nullable=False, unique=True)
     company_name = Column(EncryptedType(Unicode, sqlalchemy_encrypt_key), nullable=False)
@@ -123,16 +124,6 @@ class UserModel(BaseModel):
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
     update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
 
-    # phone
-    @property
-    def phone(self):
-        return self._phone
-    @phone.setter
-    def phone(self, value):
-        if not constants.phone_number_regex.match(value):
-            raise err.InvalidPhoneNumber()
-        self._phone = value
-        
     #
     @classmethod
     def create(cls, name, phone, email, company_name, company_url, token=None, key=None):
@@ -153,6 +144,7 @@ class UserModel(BaseModel):
         user.company_url = company_url
         user.token = token
         user.key = key
+        user.status = constants.StatusEnum.valid.value
 
         #
         session.add(user)
@@ -206,7 +198,7 @@ class UserAuthQuotaRedis(object):
     pattern = 'user_auth_quota:{user_id}:{auth}'
 
     def __init__(self, user_id, auth, quota):
-        assert auth in constants.AuthEnum.__members__, 'invali user_auth: "%s"' % (auth,)
+        assert hasattr(constants.AuthEnum, auth), 'invali user_auth: "%s"' % (auth,)
         assert isinstance(quota, utils.IntegerTypes), 'invalid quota value, "%s"' % (quota,)
         
         self.redis_key = self.pattern.format(user_id=user_id, auth=auth)
@@ -246,23 +238,11 @@ class PhoneWhiteListModel(BaseModel):
 
     #
     user_id = Column(BIGINT(unsigned=True), nullable=False, index=True)
-    _phone = Column('phone', CHAR(11), nullable=False, unique=True)
+    phone = Column('phone', CHAR(11), nullable=False, unique=True)
 
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
     update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
 
-
-    # phone
-    @property
-    def phone(self):
-        return self._phone
-    @phone.setter
-    def phone(self, value):
-        if not constants.phone_number_regex.match(value):
-            raise err.InvalidPhoneNumber()
-        self._phone = value
-
-        return
     
     pass
 
@@ -329,26 +309,49 @@ class PhoneCheckResultModel(BaseModel):
     #
     user_id = Column(BIGINT(unsigned=True), index=True, nullable=False)
     
-    _phone = Column('phone', CHAR(11), nullable=False, unique=True)
+    phone = Column('phone', CHAR(11), nullable=False, unique=True)
     rating = Column('rating', Enum(*[e.value for e in constants.RatingEnum]), nullable=False, index=True)
 
     # 
     create_datetime = Column('create_datetime', DATETIME, index=True, nullable=False, default=datetime.datetime.now)
     update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
 
-
-    # phone
-    @property
-    def phone(self):
-        return self._phone
     
-    @phone.setter
-    def phone(self, value):
-        if not constants.phone_number_regex.match(value):
-            raise err.InvalidPhoneNumber()
-        self._phone = value
-        return
+    @classmethod
+    def create(cls, user_id, phone, rating):
+        global session
+        if not hasattr(constants.RatingEnum, rating):
+            raise err.InvalidRating()
 
+        if not constants.phone_number_regex.match(phone):
+            raise err.InvalidPhoneNumber()
+        
+
+        result = session.query(PhoneCheckResultModel).filter_by(phone=phone).scalar()
+
+        # insert new
+        if not result:
+            n = cls()
+            n.user_id = user_id
+            n.phone = phone
+            n.rating = rating
+            session.add(n)
+            session.flush()
+            logger.info('insert phone_check_result. user_id: %s, phone: %s, rating: %s',
+                        user_id, phone, rating)
+            return n
+
+        # update
+        if constants.RatingEnum.greater_than(rating, result.rating):
+            result.rating = rating
+            session.flush()
+            logger.info('update phone_check_result. user_id: %s, phone: %s, rating: %s',
+                        user_id, phone, rating)
+
+            return result
+
+        return result
+                
     pass
 
 
@@ -357,4 +360,5 @@ if __name__ == "__main__":
     BaseModel.metadata.drop_all(bind=Session.engine, checkfirst=True)        
     BaseModel.metadata.create_all(bind=Session.engine, checkfirst=True)
     
-    #UserModel.__table__.create(bind=Session.engine, checkfirst=False)
+    #UserModel.__table__.drop(bind=Session.engine, checkfirst=True)
+    #UserModel.__table__.create(bind=Session.engine, checkfirst=True)    

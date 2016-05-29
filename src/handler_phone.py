@@ -64,3 +64,31 @@ class CommitWhiteListHandler(myweb.JsonHandler):
         return None
     pass
 
+class CommitCheckResultHandler(myweb.JsonHandler):
+    def get(self):
+        phone = self.get_argument("phone")
+        self.check(auth=constants.AuthEnum.phone_commit_check_result, sign_parameter_list=[phone])
+
+        rating = self.get_argument_rating()
+        session = web.ctx.orm
+        user = web.ctx.user
+
+        models.PhoneCheckResultModel.create(user_id=user.id, phone=phone, rating=rating)
+
+        return 
+        #
+        result = session.query(models.PhoneCheckLogModel).filter_by(phone=phone).scalar()
+
+        # insert new
+        if not result:
+            n = models.PhoneCheckLogModel()
+            n.user_id = user.id
+            n.phone = phone
+            n.rating = rating
+            session.add(n)
+            session.flush()
+            return
+        
+        if constants.RatingEnum.greater_than(rating, result.rating):
+            result
+                

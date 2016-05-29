@@ -164,7 +164,7 @@ class BaseHandler(object):
     
     def get_argument_action(self, argument):
         v = self.get_argument(argument)
-        if v not in constants.ActionEnum.__members__:
+        if not hasattr(constants.ActionEnum, v):
             raise err.InvalidAction()
         return v
     
@@ -187,8 +187,7 @@ class BaseHandler(object):
 
     def get_argument_rating(self, argument):
         v = self.get_argument(argument)
-
-        if v not in constants.RatingEnum.__members__:
+        if not hasattr(constants.RatingEnum, v):
             raise err.InvalidRating()
         return v
 
@@ -241,10 +240,13 @@ class JsonHandler(BaseHandler):
 
         session = web.ctx.orm
         # get user
-        user = session.query(UserModel).filter_by(token=token, status=constants.StatusEnum.valid.value).scalar()
+        user = session.query(UserModel).filter_by(token=token).scalar()
         if not user:
             raise err.NotFoundToken()
 
+        if user.status != constants.StatusEnum.valid.value:
+            raise err.NotFoundToken()
+        
         # check auth
         user_auth = session.query(UserAuthModel).filter_by(user_id=user.id, auth=auth.value).scalar()
         if not user_auth:

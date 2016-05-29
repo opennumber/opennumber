@@ -1,4 +1,4 @@
-# api.opennumber.org api
+# api.opennumber.org
 
 为了防止接口滥用，请填写以下资料发送到到email: opennumber.org@gmail.com
 ```
@@ -44,9 +44,7 @@ api.opennumber.org的响应为'application/json; charset=utf8'
 
 
 -------
-### api. 检测手机号
-
-检测一个手机号码的特征
+### 获取手机号码的风险评级
 - url: /phone/check
 - token: [必选]。
 - timestamp: [必选]
@@ -78,6 +76,47 @@ yellow: 该手机号码行为符合少量有风险的模式。
 red:  该手机号码行为符合大量有风险的模式。
 black: 该手机号码为黑名单。 信用极差！
 ```
+
+
 ------
+### 提交手机号码白名单
+提交白名单手机号码
 
+这个需要单独申请接口访问权限。 发送email到opennumber.org@gmail.com申请访问权限
 
+- url: /phone/commit/white_list
+- token: [必选]。
+- timestamp: [必选]
+- phone: [必选] 要检测的手机号码
+- sign: [必选] md5(string_concat(token, timestamp, phone))
+
+返回的结果为
+```javascript
+{
+    "code": 0,
+    "message": "success",
+    "result": null
+}
+```
+
+----
+### 提交手机号码的风险rating
+提交手机号码的风险rating
+
+这个需要单独申请接口访问权限。 发送email到opennumber.org@gmail.com申请访问权限
+
+- url: /phone/commit/white_list
+- token: [必选]。
+- timestamp: [必选]
+- phone: [必选] e.g: 13311223344
+- rating: [必填]
+- sign: [必选] md5(string_concat(token, timestamp, phone))
+
+返回的结果为
+```javascript
+{
+    "code": 0,
+    "message": "success",
+    "result": null
+}
+```

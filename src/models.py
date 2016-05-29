@@ -254,8 +254,8 @@ class PhoneCheckLogModel(BaseModel):
 
     #
     user_id = Column('user_id', BIGINT(unsigned=True), index=True, nullable=False)
-    _phone = Column('phone', CHAR(11), index=True, nullable=False)
-    _ip = Column('ip', VARCHAR(64), index=True, nullable=False)
+    phone = Column('phone', CHAR(11), index=True, nullable=False)
+    ip = Column('ip', VARCHAR(64), index=True, nullable=False)
 
     action = Column('action', Enum(*[e.value for e in constants.ActionEnum]), index=True, nullable=False)
     # 
@@ -263,42 +263,6 @@ class PhoneCheckLogModel(BaseModel):
     
     update_datetime = Column('update_datetime', DATETIME, index=True, nullable=False, onupdate=datetime.datetime.now, default=datetime.datetime.now)
 
-    # ip
-    @property
-    def ip(self):
-        return self._ip
-    
-    @ip.setter
-    def ip(self, value):
-        assert isinstance(value, (types.StringType, types.UnicodeType, types.NoneType))
-        if not value:
-            self._ip = ''
-            return
-
-        if isinstance(value, types.StringType):
-            value = value.decode('utf8')
-            
-        try:
-            ipaddress.ip_address(value)
-            self._ip = value.strip()
-        except ValueError:
-            raise err.InvalidIp()
-        
-        return
-    
-    # phone
-    @property
-    def phone(self):
-        return self._phone
-    
-    @phone.setter
-    def phone(self, value):
-        if not constants.phone_number_regex.match(value):
-            raise err.InvalidPhoneNumber()
-        self._phone = value
-        return
-
-    
     pass
 
 class PhoneCheckResultModel(BaseModel):

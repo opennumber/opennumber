@@ -168,9 +168,27 @@ class TestWeb(BaseTest):
         r = response.json()
 
         self.assertTrue(r['code'] == 0, 'access url failure: url: %s, response: %s' % (url, response.text))
-        
+
         return
 
+
+    def test_check_result(self):
+        phone = self.get_random_phone_number()
+        # check
+
+        timestamp = str(time.time())
+        user = self.user
+        rating = random.choice(constants.RatingEnum.get_ordered_list())
+        url = urlparse.urljoin(self.server, '/phone/commit/check_result')
+        params = dict(token=user.token, timestamp=timestamp, phone=phone, rating=rating)
+        params['sign'] = utils.md5(user.key+timestamp+phone)
+        response = requests.get(url, params=params)
+
+        r = response.json()
+
+        self.assertTrue(r['code'] == 0, 'access url failure: url: %s, response: %s' % (url, response.text))
+        
+    
     pass
 
 

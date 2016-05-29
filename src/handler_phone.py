@@ -26,7 +26,8 @@ class CheckHandler(myweb.JsonHandler):
         check_log = models.PhoneCheckLogModel(user_id=web.ctx.user.id,
                                               phone=phone,
                                               ip=ip,
-                                              action=action)
+                                              action=action,
+                                              create_datetime=create_datetime)
         session.add(check_log)
 
         # check in whitelist
@@ -69,26 +70,11 @@ class CommitCheckResultHandler(myweb.JsonHandler):
         phone = self.get_argument("phone")
         self.check(auth=constants.AuthEnum.phone_commit_check_result, sign_parameter_list=[phone])
 
-        rating = self.get_argument_rating()
+        rating = self.get_argument_rating('rating')
         session = web.ctx.orm
         user = web.ctx.user
 
         models.PhoneCheckResultModel.create(user_id=user.id, phone=phone, rating=rating)
-
-        return 
-        #
-        result = session.query(models.PhoneCheckLogModel).filter_by(phone=phone).scalar()
-
-        # insert new
-        if not result:
-            n = models.PhoneCheckLogModel()
-            n.user_id = user.id
-            n.phone = phone
-            n.rating = rating
-            session.add(n)
-            session.flush()
-            return
         
-        if constants.RatingEnum.greater_than(rating, result.rating):
-            result
+        return 
                 

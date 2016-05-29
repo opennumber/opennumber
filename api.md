@@ -13,13 +13,13 @@ name:
 
 
 
-
+----
 ### HTTP 访问设置
 - host: http://api.opennumber.org
 - method: GET
 - encoding: utf8
 
-
+----
 ### HTTP 请求参数说明
 sign：该参数值为一个md5数值的hex。 例如md5("123456") == "e10adc3949ba59abbe56e057f20f883e"
 timestamp: 表示该请求的unix timestamp。为了方便调试。e.g timestamp=time()
@@ -27,7 +27,7 @@ token: 访问者的身份token
 key:  用来生成sign
 
 
-
+-----
 ### HTTP 响应
 api.opennumber.org的响应为'application/json; charset=utf8'
 ```javascript
@@ -75,3 +75,6 @@ yellow: 该手机号码在少量的网站从事过一致的行为
 red:  该手机号码在大量的网站上从事过一致的行为。
 black: 该手机号码为黑名单。 信用极差！
 ```
+------
+
+

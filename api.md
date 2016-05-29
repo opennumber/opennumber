@@ -1,5 +1,4 @@
-# opennumber.org api
-通过该接口访问  opennumber.org
+# api.opennumber.org api
 
 为了防止接口滥用，请填写以下资料发送到到email: opennumber.org@gmail.com
 ```

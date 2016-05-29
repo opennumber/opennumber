@@ -21,15 +21,16 @@ name:
 
 ----
 ### HTTP 请求参数说明
-sign：该参数值为一个md5数值的hex。 例如md5("123456") == "e10adc3949ba59abbe56e057f20f883e"
-timestamp: 表示该请求的unix timestamp。为了方便调试。e.g timestamp=time()
-token: 访问者的身份token
-key:  用来生成sign
+- sign：该参数值为一个md5数值的hex。 例如md5("123456") == "e10adc3949ba59abbe56e057f20f883e"
+- timestamp: 表示该请求的unix timestamp。为了方便调试。e.g timestamp=time()
+- token: 访问者的身份token
+- key:  用来生成sign
 
 
 -----
 ### HTTP 响应
 api.opennumber.org的响应为'application/json; charset=utf8'
+
 ```javascript
 {
     "code": 0,
@@ -37,13 +38,14 @@ api.opennumber.org的响应为'application/json; charset=utf8'
     "result": null
 }
 ```
-code: 整数。 0表示成功， 其他的为请求失败。
-message: 请求结果的文字表述
-result: 请求的结果。不同的api，返回的数据会稍有不同
+- code: 整数。 0表示成功， 其他的为请求失败。
+- message: 请求结果的文字表述
+- result: 请求的结果。不同的api，返回的数据会稍有不同
 
 
 -------
 ### api. 检测手机号
+
 检测一个手机号码的特征
 - url: /phone/check
 - token: [必选]。
@@ -53,6 +55,7 @@ result: 请求的结果。不同的api，返回的数据会稍有不同
 - ip: [选填] 支持ipv4/ipv6。你们的客户的IP地址， 注意不是你们的服务器地址。
 - create_datetime: [选填] 手机号码action的时间，如果为空的时候， 默认为当前的时间。如果要检测一个手机号在三天前的login action，请设置create_datetime为三天前的时间。e.g: create_datetime=2016-01-01 20:00:00
 - sign: [必选] md5(string_concat(token, timestamp, phone))
+
 
 返回的结果
 ```javascript

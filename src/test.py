@@ -155,6 +155,7 @@ class TestWeb(BaseTest):
         params['sign'] = utils.md5(user.key+timestamp+phone)
         response = requests.get(url, params=params)
 
+        logging.info('response: %s', response.text)
         r = response.json()
 
         self.assertTrue(r['code'] == 0, 'access url failure: url: %s, response: %s' % (url, response.text))

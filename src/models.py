@@ -37,7 +37,7 @@ class Session(object):
                               pool_size=32,
                               pool_recycle=60*10, # half hour
                               pool_timeout=1,
-                              echo=True)
+                              echo=False)
 
 
 

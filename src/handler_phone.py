@@ -29,7 +29,6 @@ class CheckHandler(myweb.JsonHandler):
                                               action=action,
                                               create_datetime=create_datetime)
         session.add(check_log)
-
         # check in whitelist
         result = dict(rating=constants.RatingEnum.green.value)
         if session.query(models.PhoneWhiteListModel).filter_by(phone=phone).scalar():

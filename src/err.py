@@ -118,7 +118,7 @@ class NotFoundToken(BaseError):
 
 class AccessReject(BaseError):
     code = 11
-    message = 'access reject'
+    message = 'access reject, email opennumber.org@gmail.com to get help.'
     pass
 
 class QuotaOverFlow(BaseError):

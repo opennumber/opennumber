@@ -37,7 +37,7 @@ QQ群: [218812855](http://jq.qq.com/?_wv=1027&k=28f39rl)
 ## 访问API
 作为一个开放的公共平台， [www.opennumber.org](http://www.opennumber.org) 不收取任何的使用费用。
 
-点击查看API文档 []
+点击查看[API文档](https://github.com/opennumber/opennumber/blob/master/api.md)
 
 
 

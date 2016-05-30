@@ -1,8 +1,8 @@
 # opennumber
 
-[www.opennumber.org](http://www.opennumber.org)  薅羊毛手机号码监测开放平台
+[www.opennumber.org](http://www.opennumber.org)  薅羊毛手机号码监测开放平台 免费 开放 开源
 
-免费 开放 精准
+
 ## 我们要解决什么问题？
 因为监管的缺失，在中国每天都有数十万的未经实名认证手机号码，通过非法的渠道流入到市场/猫池/卡商等不法份子手中。
 
@@ -31,6 +31,8 @@
 本着"人人为我，我为人人"的原则，任何人和团体提交的手机号码，都会让加入到该平台的其他人受益。
 
 我们期待着你加入该开放平台， 以便于为中国的互联网安全尽绵薄之力。
+
+github: [github.com/opennumber/opennumber](https://github.com/opennumber/opennumber)
 
 QQ群: [218812855](http://jq.qq.com/?_wv=1027&k=28f39rl)
 

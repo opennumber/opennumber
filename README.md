@@ -1,6 +1,6 @@
 # opennumber
 
-[www.opennumber.org](http://www.opennumber.org)  薅羊毛手机号码监测开放平台 免费 开放 开源
+[www.opennumber.org](http://www.opennumber.org)  恶意手机号码监测开源平台 
 
 <br>
 ## 我们要解决什么问题？
@@ -28,21 +28,36 @@
 
 
 <br>
+## 访问API
+作为一个开源的公共平台， [www.opennumber.org](http://www.opennumber.org) 不收取任何的使用费用。
+
+点击查看[API文档](https://github.com/opennumber/opennumber/blob/master/api.md)
+
+
+
+<br>
 ## 加入我们
 本着"人人为我，我为人人"的原则，任何人和团体提交的手机号码，都会让加入到该平台的其他人受益。
 
-我们期待着你加入该开放平台， 以便于为中国的互联网安全尽绵薄之力。
+我们期待着你加入该开源平台， 以便于为中国的互联网安全尽绵薄之力。
+
+如果您擅长大数据分析，可以从我们这里免费获取数据，以帮助我们更好的识别恶意模式。
 
 github: [github.com/opennumber/opennumber](https://github.com/opennumber/opennumber)
 
 QQ群: [218812855](http://jq.qq.com/?_wv=1027&k=28f39rl)
-
-
 <br>
-## 访问API
-作为一个开放的公共平台， [www.opennumber.org](http://www.opennumber.org) 不收取任何的使用费用。
+<br>
 
-点击查看[API文档](https://github.com/opennumber/opennumber/blob/master/api.md)
+## 感谢
+感谢所有为此默默作出贡献的人们，让opennumber可以开始星辰大海的航行。
+
+- @b1acK-j 提供了大部分的猫池卡商手机号码
+- casvision
+- qingcloud.com 提供了稳定高效的大数据分析平台
+- 刘一辰同学不断优化对恶意模式的识别
+<br><br>
+
 
 
 

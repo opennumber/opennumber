@@ -8,10 +8,12 @@ import subprocess
 import os
 import sys
 import argparse
+import base64
 
 ROOT_SRC_DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 sys.path.insert(0, ROOT_SRC_DIRECTORY)
+
 
 #
 import context
@@ -31,8 +33,12 @@ if __name__ == "__main__":
     
     args = parse.parse_args(sys.argv[1:])
 
-    models.UserModel.create(name=args.name, phone=args.phone, email=args.email,
-                            company_name=args.company_name, company_url=args.company_url)
+
+    name = base64.b64encode(args.name)
+    company_url = base64.b64encode(args.company_url)
+    company_name = base64.b64encode(args.company_name)    
+    models.UserModel.create(name=name, phone=args.phone, email=args.email,
+                            company_name=company_name, company_url=company_url)
     
     
 

@@ -321,8 +321,8 @@ class PhoneCheckResultModel(BaseModel):
 
 
 if __name__ == "__main__":
-    BaseModel.metadata.drop_all(bind=Session.engine, checkfirst=True)        
-    BaseModel.metadata.create_all(bind=Session.engine, checkfirst=True)
+    #BaseModel.metadata.drop_all(bind=Session.engine, checkfirst=True)        
+    #BaseModel.metadata.create_all(bind=Session.engine, checkfirst=True)
     
     #UserModel.__table__.drop(bind=Session.engine, checkfirst=True)
     #UserModel.__table__.create(bind=Session.engine, checkfirst=True)    

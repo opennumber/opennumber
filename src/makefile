@@ -28,21 +28,6 @@ restart:
 test:							#
 	python -m unittest discover -f
 
-# 把当前的代码copy到开发服务器上, make copy_to_server target=username@host:/path
-copy_to_production_server:
-	find . -name '*.pyc' -delete
-	find . -name '*.py~' -delete
-	find . -name '*.pyo' -delete
-	find . -name '*~' -delete
-	scp -r * ubuntu@$(opennumber_production_server_path)
-
-copy_to_debug_server:
-	find . -name '*.pyc' -delete
-	find . -name '*.py~' -delete
-	find . -name '*.pyo' -delete
-	find . -name '*~' -delete
-	scp -r * ubuntu@$(opennumber_debug_server_path)
-
 clean:
 	find . -name '*~' -delete
 	find . -name '*.pyc' -delete

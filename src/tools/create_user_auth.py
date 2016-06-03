@@ -13,6 +13,14 @@ ROOT_SRC_DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 sys.path.insert(0, ROOT_SRC_DIRECTORY)
 
+var_runmode = 'opennumber_runmode'
+if os.getenv(var_runmode):
+    os.environ[var_runmode] = os.getenv(var_runmode)
+else:
+    runmode = len(sys.argv) == 2 and sys.argv[1] or 'debug'
+    os.environ[var_runmode] = runmode
+
+
 #
 import context
 import settings

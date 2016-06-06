@@ -1,6 +1,6 @@
 # api.opennumber.org
 
-为了防止接口滥用，请填写以下资料发送到到email: opennumber.org@gmail.com
+为了防止接口滥用，请填写以下资料发送到到email: opennumber_org@126.com
 ```
 phone:
 name:
@@ -82,7 +82,7 @@ black: 该手机号码为黑名单。 信用极差！
 ### 提交手机号码白名单
 提交白名单手机号码
 
-这个需要单独申请接口访问权限。 发送email到opennumber.org@gmail.com申请访问权限
+这个需要单独申请接口访问权限。 发送email到opennumber_org@126.com申请访问权限
 
 - url: /phone/commit/white_list
 - token: [必选]。
@@ -103,7 +103,7 @@ black: 该手机号码为黑名单。 信用极差！
 ### 提交手机号码的风险rating
 提交手机号码的风险rating
 
-这个需要单独申请接口访问权限。 发送email到opennumber.org@gmail.com申请访问权限
+这个需要单独申请接口访问权限。 发送email到opennumber_org@126.com申请访问权限
 
 - url: /phone/commit/white_list
 - token: [必选]。

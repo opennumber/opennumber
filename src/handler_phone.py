@@ -9,7 +9,13 @@ import myweb
 import constants
 import models
 
+from models import PhoneWhiteListModel, PhoneCheckResultModel
+from view_check_phone import PhoneCheckLogView
+
+logger = logging.getLogger(__name__)
 class CheckHandler(myweb.JsonHandler):
+    count_rank = utils.CountRankMap([(10, 'green'), (15, 'yellow'), (25, 'red'), (35, "black")])
+    
     def get(self):
         phone = self.get_argument_phone('phone')
         
@@ -20,10 +26,11 @@ class CheckHandler(myweb.JsonHandler):
 
         ip = self.get_argument_ip("ip", '')
         action = self.get_argument_action("action")
-
+        user_id = web.ctx.user.id
         session = web.ctx.orm
+
         # add check log
-        check_log = models.PhoneCheckLogModel(user_id=web.ctx.user.id,
+        check_log = models.PhoneCheckLogModel(user_id=user_id,
                                               phone=phone,
                                               ip=ip,
                                               action=action,
@@ -35,12 +42,24 @@ class CheckHandler(myweb.JsonHandler):
             result['rating'] = constants.Rating.white.value
             return result
 
-        # check in check result
-        check_result = session.query(models.PhoneCheckResultModel).filter_by(phone=phone).scalar()
-        if check_result:
-            result['rating'] = check_result.rating
-            return result
+        #
+        ip_rank = PhoneCheckLogView.get_ip_rank(phone)
+        user_id_rank = PhoneCheckLogView.get_user_id_rank(phone)
 
+        rank = ip_rank * user_id_rank
+
+        check_result = session.query(PhoneCheckResultModel).filter_by(phone=phone).scalar()
+        if check_result:
+            _rank = filter(lambda x: x[1]==check_result.rating, self.count_rank.count_rank_sorted_list)[0][0]
+            rank = max(_rank, rank)
+            pass
+        
+        result['rating'] = self.count_rank.get_rank(rank)
+        logger.info('new rating: phone: %s, user_id: %s, rating: %s, rank: %s',
+                    phone, user_id, result['rating'], rank)
+        # 
+        models.PhoneCheckResultModel.create(user_id, phone, result['rating'])
+        
         return result
 
     pass

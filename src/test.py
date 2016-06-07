@@ -14,6 +14,9 @@ import requests
 import settings
 import urlparse
 
+#
+from view_check_phone import PhoneCheckLogView
+
 class BaseTest(unittest.TestCase):
     def setUp(self):
         self.server = os.getenv('opennumber_server', '127.0.0.1:2000')
@@ -193,8 +196,23 @@ class TestWeb(BaseTest):
     pass
 
 
+class TestPhoneCheckLog(BaseTest):
+    def setUp(self):
+        super(TestPhoneCheckLog, self).setUp()
+        self.service = PhoneCheckLogView
+        pass
+    
+    def test_get_user_id_rank(self):
+        phone = self.get_random_phone_number()
+        self.service.get_user_id_rank(phone)
+        return
+    
+    def test_get_ip_rank(self):
+        phone = self.get_random_phone_number()
+        self.service.get_ip_rank(phone)
+        return
 
-
+        
 
 if __name__ == "__main__":
     unittest.main(failfast=True)

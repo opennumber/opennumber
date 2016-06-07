@@ -155,8 +155,79 @@ def get_today_countdown_seconds(now=None):
     seconds = diff.total_seconds()
     return int(seconds)
 
+def async_call(fn, timeout=None, ignore_exception=False, args=(), kwargs={}):
+    """
+    timeout: number | None, 等待函数执行多长时间
+    ignore_exception: 当函数支持发生异常时， 返回值为utils.none
+    """
     
+    assert isinstance(timeout, NumberTypes) or isinstance(timeout, types.NoneType), 'invalid timeout value, should be number or None'
+    
+    thread_name = 'async_call:%s' % (fn.__name__)
+    fd40cf8dfd9d12c633bb07SICPsntO4ZmR5f2K = []
+    def _fn(*args, **kwargs):
+        try:
+            ret = fn(*args, **kwargs)
+        except:
+            if not ignore_exception:
+                raise
+            
+            logging.exception("")
+            return
+        
+        fd40cf8dfd9d12c633bb07SICPsntO4ZmR5f2K.append(ret)
+        return ret
+    
+    t = threading.Thread(name=thread_name, target=_fn, args=args, kwargs=kwargs)
+    t.start()
+    t.join(timeout=timeout)
+    if t.is_alive():
+        logging.warn("thread '%s' is alive after join", thread_name)
+        pass
 
+    if len(fd40cf8dfd9d12c633bb07SICPsntO4ZmR5f2K) == 1:
+        return fd40cf8dfd9d12c633bb07SICPsntO4ZmR5f2K[0]
+    else:
+        return none
+    
+    return none
+
+
+class Test(unittest.TestCase):
+    def test_async_call(self):
+        retval = 1
+        def fn():
+            return 1
+        _retval = async_call(fn)
+        self.assertTrue(retval == _retval, 'asycn_call failure')
+
+        async_call(time.sleep, timeout=0.2, args=(1,), )
+        return
+
+    pass
+
+
+class CountRankMap(object):
+    def __init__(self, count_rank_sorted_list):
+        assert all([x[1] for x in count_rank_sorted_list]), 'value should non-zero number'
+        k = [x[0] for x in count_rank_sorted_list]
+        _k = k[:]
+        _k.sort()
+        assert k == _k, 'k should be sorted asc'
+
+        self.count_rank_sorted_list = count_rank_sorted_list[:]
+        pass
+
+    def get_rank(self, count):
+        assert isinstance(count, (int, long)), 'count should be integer'
+        hit = filter(lambda e: count <= e[0], self.count_rank_sorted_list)
+        if hit:
+            return hit[0][1]
+        else:
+            return self.count_rank_sorted_list[-1][1]
+
+        pass
+            
 if __name__ == "__main__":
     unittest.main()
     pass

@@ -269,7 +269,7 @@ class JsonHandler(BaseHandler):
 
 
         sign = self.get_argument('sign')
-        if sign != utils.md5(sign_text):
+        if sign.lower() != utils.md5(sign_text).lower():
             raise err.InvaildSign()
 
         return

@@ -52,7 +52,7 @@ api.opennumber.org的响应为'application/json; charset=utf8'
 - action: [必选] 该手机号码在你们的网站干了什么事情. ['login', 'logout', 'register', 'post']. 对于例如领取优惠券，发帖等action=post。请谨慎选择
 - ip: [选填] 支持ipv4/ipv6。你们的客户的IP地址， 注意不是你们的服务器地址。
 - create_datetime: [选填] 手机号码action的时间，如果为空的时候， 默认为当前的时间。如果要检测一个手机号在三天前的login action，请设置create_datetime为三天前的时间。e.g: create_datetime=2016-01-01 20:00:00
-- sign: [必选] md5(string_concat(token, timestamp, phone))
+- sign: [必选] md5(string_concat(key, timestamp, phone))
 
 
 返回的结果
@@ -88,7 +88,7 @@ black: 该手机号码为黑名单。 信用极差！
 - token: [必选]。
 - timestamp: [必选]
 - phone: [必选] 要检测的手机号码
-- sign: [必选] md5(string_concat(token, timestamp, phone))
+- sign: [必选] md5(string_concat(key, timestamp, phone))
 
 返回的结果为
 ```javascript
@@ -110,7 +110,7 @@ black: 该手机号码为黑名单。 信用极差！
 - timestamp: [必选]
 - phone: [必选] e.g: 13311223344
 - rating: [必填]
-- sign: [必选] md5(string_concat(token, timestamp, phone))
+- sign: [必选] md5(string_concat(key, timestamp, phone))
 
 返回的结果为
 ```javascript

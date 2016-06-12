@@ -136,6 +136,13 @@ class InvalidRating(BaseError):
     message = 'invalid rating. valid rating %s' % ([e.value for e in constants.RatingEnum])
     pass
 
+class InvaildSign(BaseError):
+    code = 15
+    message = 'invalid sign'
+    pass
+
+
+
 # 下面的代码对所有的错误的代码进行校验，保证error.code不会重复
 _locals_keys = locals().keys()
 code_map = {}
